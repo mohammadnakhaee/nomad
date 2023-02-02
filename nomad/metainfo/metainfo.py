@@ -35,7 +35,6 @@ import pandas as pd
 import pint
 
 from nomad.config import process
-from nomad.datamodel.util import parse_path
 from nomad.metainfo.util import (
     Annotation, DefinitionAnnotation, MEnum, MQuantity, MRegEx, MSubSectionList, MTypes, ReferenceURL,
     SectionAnnotation, _delta_symbols, check_dimensionality, check_unit, convert_to, default_hash, dict_to_named_list,
@@ -3831,19 +3830,6 @@ class Section(Definition):
     def resolved_base_sections(self):
         for base_section in self.base_sections:
             try:
-                m_proxy_value = getattr(base_section, 'm_proxy_value', None)
-                context_upload_id = getattr(getattr(base_section, 'm_context', None), 'upload_id', None)
-                if m_proxy_value:
-                    url_parts = parse_path(m_proxy_value)
-                    if url_parts:
-                        _, proxy_upload_id, _, _, _ = url_parts
-                        if proxy_upload_id and proxy_upload_id != context_upload_id:
-                            from nomad.processing import Upload
-                            from nomad.datamodel import ServerContext
-                            for proxy_base_section in base_section.base_sections:
-                                upload = Upload(upload_id=proxy_upload_id)
-                                new_context = ServerContext(upload=upload)
-                                proxy_base_section.m_proxy_context = new_context
                 base_section.m_resolved()
             except MetainfoReferenceError as e:
                 assert False, f'Cannot resolve base_section: {str(e)}'
