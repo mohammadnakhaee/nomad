@@ -35,6 +35,7 @@ import pandas as pd
 import pint
 
 from nomad.config import process
+from nomad.datamodel.util import parse_path
 from nomad.metainfo.util import (
     Annotation, DefinitionAnnotation, MEnum, MQuantity, MRegEx, MSubSectionList, MTypes, ReferenceURL,
     SectionAnnotation, _delta_symbols, check_dimensionality, check_unit, convert_to, default_hash, dict_to_named_list,
@@ -3828,7 +3829,6 @@ class Section(Definition):
 
     @constraint
     def resolved_base_sections(self):
-        from nomad.datamodel.util import parse_path
         for base_section in self.base_sections:
             try:
                 m_proxy_value = getattr(base_section, 'm_proxy_value', None)
