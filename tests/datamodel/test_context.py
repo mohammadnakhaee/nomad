@@ -310,6 +310,118 @@ def test_server_custom_schema(upload_contents, raw_files):
         assert results == content
 
 
+@pytest.mark.parametrize(
+    'upload1_contents, upload2_contents', [
+        pytest.param(
+            {
+                'schema.json': {
+                    'name': 'test schema package',
+                    'definitions': {
+                        'section_definitions': [
+                            {
+                                "base_sections": [
+                                    "nomad.datamodel.data.EntryData"
+                                ],
+                                "name": "BaseSection"
+                            }
+                        ]
+                    }
+                },
+                'chemical.archive.json': {
+                    'definitions': {
+                        'section_definitions': [
+                            {
+                                "base_sections": [
+                                    "../upload/raw/schema.json#/definitions/section_definitions/0"
+                                ],
+                                "name": "SubstanceExtended"
+                            }
+                        ]
+                    }
+                },
+                'chem.archive.json': {
+                    'definitions': {
+                        'section_definitions': [
+                            {
+                                "base_sections": [
+                                    "../upload/raw/chemical.archive.json#/definitions/section_definitions/0"
+                                ],
+                                "name": "Chem"
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                'extended_chem.archive.json': {
+                    'definitions': {
+                        'section_definitions': [
+                            {
+                                "base_sections": [
+                                    "../upload/upload1_id/archive/upload1_entry3#/definitions/section_definitions/0"
+                                ],
+                                "name": "ExtendedChem"
+                            }
+                        ]
+                    }
+                }
+            }, id='external-references')]
+)
+def test_server_external_schema(upload1_contents, upload2_contents, raw_files):
+    upload1_files = files.StagingUploadFiles('upload1_id', create=True)
+    upload1 = processing.Upload(upload_id='upload1_id')
+    for file_name, content in upload1_contents.items():
+        with upload1_files.raw_file(file_name, 'wt') as f:
+            json.dump(content, f, indent=2)
+
+    context1 = ServerContext(upload=upload1)
+
+    parser = ArchiveParser()
+
+    i = 0
+    for file_name, content in upload1_contents.items():
+        i = i + 1
+        if not re.match(r'.*.archive.json', file_name):
+            continue
+
+        entry_id = 'upload1_entry{}'.format(i)
+        archive = EntryArchive(
+            m_context=context1, metadata=EntryMetadata(
+                upload_id='upload1_id', entry_id=entry_id, mainfile=file_name))
+
+        parser.parse(mainfile=upload1_files.raw_file_object(file_name).os_path, archive=archive)
+        upload1_files.write_archive(entry_id, archive.m_to_dict())
+        results = archive.m_to_dict(with_out_meta=True)
+        del results['metadata']
+        assert results == content
+
+    upload2_files = files.StagingUploadFiles('upload2_id', create=True)
+    upload2 = processing.Upload(upload_id='upload2_id')
+    for file_name, content in upload2_contents.items():
+        with upload2_files.raw_file(file_name, 'wt') as f:
+            json.dump(content, f, indent=2)
+
+    context2 = ServerContext(upload=upload2)
+    parser = ArchiveParser()
+
+    i = 0
+    for file_name, content in upload2_contents.items():
+        i = i + 1
+        if not re.match(r'.*.archive.json', file_name):
+            continue
+
+        entry_id = 'upload2_entry{}'.format(i)
+        archive = EntryArchive(
+            m_context=context2, metadata=EntryMetadata(
+                upload_id='upload2_id', entry_id=entry_id, mainfile=file_name))
+
+        parser.parse(mainfile=upload2_files.raw_file_object(file_name).os_path, archive=archive)
+        upload2_files.write_archive(entry_id, archive.m_to_dict())
+        results = archive.m_to_dict(with_out_meta=True)
+        del results['metadata']
+        assert results == content
+
+
 def test_client_custom_schema(api_v1, published_wo_user_metadata):
     url = 'http://testserver/api/v1'
     test_path = 'tests/data/datamodel/'
