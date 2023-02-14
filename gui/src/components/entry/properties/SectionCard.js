@@ -24,7 +24,7 @@ import {Box, IconButton, Typography, makeStyles} from '@material-ui/core'
 import CodeIcon from '@material-ui/icons/Code'
 import MoreIcon from '@material-ui/icons/MoreVert'
 import { ArchiveButton } from '../../nav/Routes'
-import {SectionPlots} from '../../archive/ArchiveBrowser'
+import {getAllProperties, SectionPlots} from '../../archive/ArchiveBrowser'
 import Quantity, {QuantityCell, QuantityRow, QuantityTable} from '../../Quantity'
 import {Editor} from '@tinymce/tinymce-react'
 import { pluralize } from '../../../utils'
@@ -142,15 +142,16 @@ PropertyPreview.propTypes = {
 const SectionPreview = React.memo(({sectionDef, section}) => {
   const rootRef = useRef()
 
+  const allProperties = useMemo(() => getAllProperties(sectionDef), [sectionDef])
+
   const filterHiddenProperties = useCallback((property) => {
     const hiddenPropertyNames = sectionDef?.m_annotations?.eln?.[0]?.hide || []
     return !hiddenPropertyNames.includes(property.name)
   }, [sectionDef])
 
   const properties = useMemo(() => {
-    return sectionDef._allProperties
-      .filter(filterHiddenProperties)
-  }, [filterHiddenProperties, sectionDef._allProperties])
+    return allProperties.filter(filterHiddenProperties)
+  }, [filterHiddenProperties, allProperties])
 
   return (
     <div ref={rootRef}>

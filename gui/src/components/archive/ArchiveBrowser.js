@@ -865,6 +865,24 @@ InheritingSections.propTypes = ({
   lane: PropTypes.object
 })
 
+export function getAllProperties(sectionDef) {
+  const properties = sectionDef?.m_annotations?.eln?.[0]?.properties
+  const visible = sectionDef?.m_annotations?.eln?.[0]?.properties?.visible
+  let filteredProperties = sectionDef._allProperties
+  if (visible) {
+    const visiblePropertyNames = visible?.include || []
+    filteredProperties = sectionDef._allProperties.filter(property => visiblePropertyNames.includes(property.name))
+  }
+  const editable = properties?.editable?.exclude || []
+  const order = properties?.order || []
+  const defs = filteredProperties.map(property => ({...property, isEditableExcluded: !editable.includes(property.name)}))
+  const quantities = defs.filter(def => def.m_parent_sub_section === "quantities")
+  const sub_sections = defs.filter(def => def.m_parent_sub_section === "sub_sections")
+  quantities.sort((a, b) => order.reverse().indexOf(b.name) - order.reverse().indexOf(a.name))
+  sub_sections.sort((a, b) => order.reverse().indexOf(b.name) - order.reverse().indexOf(a.name))
+  return [...quantities, ...sub_sections]
+}
+
 function Section({section, def, parentRelation, sectionIsEditable, sectionIsInEln}) {
   const {handleArchiveChanged} = useEntryStore() || {}
   const config = useRecoilValue(configState)
@@ -967,19 +985,21 @@ function Section({section, def, parentRelation, sectionIsEditable, sectionIsInEl
     }
   }, [section, renderQuantityItem])
 
+  const allProperties = useMemo(() => getAllProperties(def), [def])
+
   if (!section) {
     console.error('section is not available')
     return null
   }
 
   const filter = config.showCodeSpecific ? def => !def.virtual : def => !def.virtual && !def.name.startsWith('x_')
-  let sub_sections = def._allProperties.filter(prop => prop.m_def === SubSectionMDef)
+  let sub_sections = allProperties.filter(prop => prop.m_def === SubSectionMDef)
   if (def.name === 'EntryArchive') {
     // put the most abstract data (last added data) first, e.g. results, metadata, workflow, run
     sub_sections = [...def.sub_sections]
     sub_sections.reverse()
   }
-  const quantities = def._allProperties.filter(prop => prop.m_def === QuantityMDef)
+  const quantities = allProperties.filter(prop => prop.m_def === QuantityMDef)
 
   const subSectionsToRender = sub_sections
     .filter(subSectionDef => section[subSectionDef.name] || config.showAllDefined || sectionIsEditable)

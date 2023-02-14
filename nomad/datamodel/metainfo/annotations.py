@@ -163,10 +163,11 @@ class ELNAnnotation(AnnotationModel):
     ''')
 
     hide: List[str] = Field(None, description='''
+        The annotation "hide" is deprecated. Use "visible" key of "properties" annotation instead.
         Allows you to hide certain quantities from a section editor. Give a list
         of quantity names. Quantities must exist in the section that this annotation
         is added to. Can only be used in section annotations.
-    ''')
+    ''', deprecated=True)
 
     overview: bool = Field(None, description='''
         Shows the annotation section on the entry's overview page. Can only be used on
@@ -175,6 +176,16 @@ class ELNAnnotation(AnnotationModel):
     lane_width: Union[str, int] = Field(None, description='''
         Value to overwrite the css width of the lane used to render the annotation
         section and its editor.
+    ''')
+
+    properties: Dict[str, Any] = Field(None, description='''
+        The value to customize the quantities and sub sections of the annotation section.
+        
+        The supported keys are:
+
+        `visible`: To determine the visible quantities and sub sections by their names<br/>
+        `editable`: To render things visible but not editable, e.g. in inheritance situations<br/>
+        `order`: # To order things, properties listed in that order first, then the rest<br/>
     ''')
 
     class Config:
