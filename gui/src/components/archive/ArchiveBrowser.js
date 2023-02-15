@@ -875,7 +875,7 @@ export function getAllProperties(sectionDef) {
   }
   const editable = properties?.editable?.exclude || []
   const order = properties?.order || []
-  const defs = filteredProperties.map(property => ({...property, isEditableExcluded: !editable.includes(property.name)}))
+  const defs = filteredProperties.map(property => ({...property, isEditable: !editable.includes(property.name)}))
   const quantities = defs.filter(def => def.m_parent_sub_section === "quantities")
   const sub_sections = defs.filter(def => def.m_parent_sub_section === "sub_sections")
   quantities.sort((a, b) => order.reverse().indexOf(b.name) - order.reverse().indexOf(a.name))

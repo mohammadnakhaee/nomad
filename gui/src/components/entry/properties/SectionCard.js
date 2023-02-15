@@ -49,7 +49,7 @@ const useStyles = makeStyles(theme => ({
   }
 }))
 
-const PropertyPreview = React.memo(({quantityDef, section}) => {
+export const PropertyPreview = React.memo(({quantityDef, section}) => {
   const classes = useStyles()
   const {entryId, uploadId} = useEntryStore()
   const maxPreviewLength = 5

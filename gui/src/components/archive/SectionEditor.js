@@ -25,6 +25,8 @@ import ListEditQuantity from '../editQuantity/ListEditQuantity'
 import { editQuantityComponents } from '../editQuantity/EditQuantity'
 import { QuantityMDef } from './metainfo'
 import {getAllProperties} from './ArchiveBrowser'
+import {QuantityRow, QuantityTable} from '../Quantity'
+import {PropertyPreview} from '../entry/properties/SectionCard'
 
 export const JsonEditor = React.memo(function JsonEditor({data, onChange, error, onError}) {
   const controlledError = useRef(error !== undefined)
@@ -176,12 +178,18 @@ const SectionEditor = React.memo(function SectionEditor({sectionDef, section, on
           </Box>
         ) : (
           allProperties.filter(filterHiddenProperties).map(property => (
-            <Box marginBottom={1} key={property.name}>
-              <PropertyEditor
-                quantityDef={property}
-                value={section?.[property.name]} onChange={value => handleChange(property, value)}
-              />
-            </Box>
+            property.isEditable
+              ? <Box marginBottom={1} key={property.name}>
+                <PropertyEditor
+                  quantityDef={property}
+                  value={section?.[property.name]} onChange={value => handleChange(property, value)}
+                />
+              </Box>
+              : <QuantityTable data={section}>
+                <QuantityRow key={property.name} >
+                  <PropertyPreview quantityDef={property} section={section}/>
+                </QuantityRow>
+              </QuantityTable>
           ))
         )
       }
