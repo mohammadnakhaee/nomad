@@ -180,9 +180,7 @@ class ELNAnnotation(AnnotationModel):
 
     properties: Dict[str, Any] = Field(None, description='''
         The value to customize the quantities and sub sections of the annotation section.
-        
-        The supported keys are:
-
+        The supported keys:
         `visible`: To determine the visible quantities and sub sections by their names<br/>
         `editable`: To render things visible but not editable, e.g. in inheritance situations<br/>
         `order`: # To order things, properties listed in that order first, then the rest<br/>
