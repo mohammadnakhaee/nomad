@@ -119,6 +119,9 @@ PropertyEditor.propTypes = {
 const useSectionEditorStyles = makeStyles(theme => ({
   root: {
     minWidth: 600
+  },
+  quantityTable: {
+    marginBottom: 5
   }
 }))
 const SectionEditor = React.memo(function SectionEditor({sectionDef, section, onChange, showJson}) {
@@ -185,7 +188,7 @@ const SectionEditor = React.memo(function SectionEditor({sectionDef, section, on
                   value={section?.[property.name]} onChange={value => handleChange(property, value)}
                 />
               </Box>
-              : <QuantityTable data={section}>
+              : <QuantityTable className={classes.quantityTable} data={section}>
                 <QuantityRow key={property.name} >
                   <PropertyPreview quantityDef={property} section={section}/>
                 </QuantityRow>
