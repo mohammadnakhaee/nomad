@@ -328,6 +328,7 @@ class ClientContext(Context):
         username: str = None, password: str = None, auth=None
     ):
         super().__init__(config.client.url + '/v1' if installation_url is None else installation_url)
+        self._installation_url = installation_url
         self.local_dir = local_dir
         if auth:
             self._auth = auth
@@ -354,8 +355,7 @@ class ClientContext(Context):
 
         context = self
         if upload_id != self.upload_id:
-            from nomad.processing import Upload
-            context = ServerContext(Upload(upload_id=upload_id))
+            context = ClientContext(installation_url=self._installation_url, local_dir=self.local_dir, upload_id=upload_id, auth=self._auth)
 
         return EntryArchive.m_from_dict(response.json()['data']['archive'], m_context=context)
 
