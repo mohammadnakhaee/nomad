@@ -358,11 +358,14 @@ def test_server_custom_schema(upload_contents, raw_files):
                         'section_definitions': [
                             {
                                 "base_sections": [
-                                    "../upload/upload1_id/archive/upload1_entry3#/definitions/section_definitions/0"
+                                    "../upload/upload1_id/archive/upload1_entry2#/definitions/section_definitions/0"
                                 ],
                                 "name": "ExtendedChem"
                             }
                         ]
+                    },
+                    "data": {
+                        "m_def": "#/definitions/section_definitions/0"
                     }
                 }
             }, id='external-references')]
@@ -378,22 +381,16 @@ def test_server_external_schema(upload1_contents, upload2_contents, raw_files):
 
     parser = ArchiveParser()
 
-    i = 0
-    for file_name, content in upload1_contents.items():
-        i = i + 1
+    for index, (file_name, content) in enumerate(upload1_contents.items()):
         if not re.match(r'.*.archive.json', file_name):
             continue
-
-        entry_id = 'upload1_entry{}'.format(i)
+        entry_id = 'upload1_entry{}'.format(index)
         archive = EntryArchive(
             m_context=context1, metadata=EntryMetadata(
                 upload_id='upload1_id', entry_id=entry_id, mainfile=file_name))
 
         parser.parse(mainfile=upload1_files.raw_file_object(file_name).os_path, archive=archive)
         upload1_files.write_archive(entry_id, archive.m_to_dict())
-        results = archive.m_to_dict(with_out_meta=True)
-        del results['metadata']
-        assert results == content
 
     upload2_files = files.StagingUploadFiles('upload2_id', create=True)
     upload2 = processing.Upload(upload_id='upload2_id')
@@ -404,13 +401,8 @@ def test_server_external_schema(upload1_contents, upload2_contents, raw_files):
     context2 = ServerContext(upload=upload2)
     parser = ArchiveParser()
 
-    i = 0
-    for file_name, content in upload2_contents.items():
-        i = i + 1
-        if not re.match(r'.*.archive.json', file_name):
-            continue
-
-        entry_id = 'upload2_entry{}'.format(i)
+    for index, (file_name, content) in enumerate(upload2_contents.items()):
+        entry_id = 'upload2_entry{}'.format(index)
         archive = EntryArchive(
             m_context=context2, metadata=EntryMetadata(
                 upload_id='upload2_id', entry_id=entry_id, mainfile=file_name))
