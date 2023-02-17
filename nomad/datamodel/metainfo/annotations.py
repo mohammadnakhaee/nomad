@@ -16,10 +16,12 @@
 # limitations under the License.
 #
 
-from typing import List, Any, Union, Dict
+from typing import List, Any, Union, Dict, Optional
 from enum import Enum
 from pydantic import Field, validator
 import re
+
+from pydantic.main import BaseModel
 
 from nomad.utils import strip
 from nomad.metainfo import AnnotationModel, MEnum, MTypes, Datetime, Reference, Quantity
@@ -79,6 +81,36 @@ valid_eln_components = {
     'reference': [
         ELNComponentEnum.ReferenceEditQuantity]
 }
+
+
+class Filter(BaseModel):
+    ''' A filter defined by an include list or and exclude list of the quantities or subsections. '''
+
+    include: Optional[List[str]] = Field(
+        None, description=strip('''
+            The list of quantity or subsection names to be included.
+        '''))
+    exclude: Optional[List[str]] = Field(
+        None, description=strip('''
+            The list of quantity or subsection names to be excluded.
+        '''))
+
+
+class SectionProperties(BaseModel):
+    ''' A filter defined by an include list or and exclude list of the quantities or subsections. '''
+
+    visible: Optional[Filter] = Field(
+        1, description=strip('''
+            Defines the visible quantities and subsections. 
+        '''))
+    editable: Optional[Filter] = Field(
+        None, description=strip('''
+            Defines the editable quantities and subsections.
+        '''))
+    order: Optional[List[str]] = Field(
+        None, description=strip('''
+            To customize the order of the quantities and subsections.
+        '''))
 
 
 class ELNAnnotation(AnnotationModel):
@@ -178,7 +210,7 @@ class ELNAnnotation(AnnotationModel):
         section and its editor.
     ''')
 
-    properties: Dict[str, Any] = Field(None, description='''
+    properties: SectionProperties = Field(None, description='''
         The value to customize the quantities and sub sections of the annotation section.
         The supported keys:
         `visible`: To determine the visible quantities and sub sections by their names<br/>
