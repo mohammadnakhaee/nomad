@@ -878,11 +878,10 @@ export function getAllVisibleProperties(sectionDef) {
   const editable = properties?.editable?.exclude || []
   const order = properties?.order || []
   const visibleProperties = filteredProperties.map(property => ({...property, _isEditable: !editable.includes(property.name)}))
+  const reversedOrder = [...order].reverse()
+  visibleProperties.sort((a, b) => reversedOrder.indexOf(b.name) - reversedOrder.indexOf(a.name) || a.m_parent_index - b.m_parent_index)
   const quantities = visibleProperties.filter(property => property.m_parent_sub_section === "quantities")
   const sub_sections = visibleProperties.filter(property => property.m_parent_sub_section === "sub_sections")
-  const reversedOrder = [...order].reverse()
-  quantities.sort((a, b) => reversedOrder.indexOf(b.name) - reversedOrder.indexOf(a.name) || a.m_parent_index - b.m_parent_index)
-  sub_sections.sort((a, b) => reversedOrder.indexOf(b.name) - reversedOrder.indexOf(a.name) || a.m_parent_index - b.m_parent_index)
   return [...quantities, ...sub_sections]
 }
 
