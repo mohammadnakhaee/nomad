@@ -24,7 +24,7 @@ import { extend, isNil } from 'lodash'
 import ListEditQuantity from '../editQuantity/ListEditQuantity'
 import { editQuantityComponents } from '../editQuantity/EditQuantity'
 import { QuantityMDef } from './metainfo'
-import {getAllProperties} from './ArchiveBrowser'
+import {getAllVisibleProperties} from './ArchiveBrowser'
 import {QuantityRow, QuantityTable} from '../Quantity'
 import {PropertyPreview} from '../entry/properties/SectionCard'
 
@@ -148,19 +148,14 @@ const SectionEditor = React.memo(function SectionEditor({sectionDef, section, on
     handleArchiveChanged()
   }, [handleArchiveChanged, onChange, section])
 
-  const allProperties = useMemo(() => getAllProperties(sectionDef), [sectionDef])
-
-  const filterHiddenProperties = useCallback((property) => {
-    const hiddenPropertyNames = allProperties?.eln?.[0]?.hide || []
-    return !hiddenPropertyNames.includes(property.name)
-  }, [allProperties])
+  const allVisibleProperties = useMemo(() => getAllVisibleProperties(sectionDef), [sectionDef])
 
   const jsonData = useMemo(() => {
     if (!showJson) {
       return null
     }
     const jsonData = {}
-    allProperties.filter(property => property.m_def === QuantityMDef && property.m_annotations?.eln)
+    allVisibleProperties.filter(property => property.m_def === QuantityMDef && property.m_annotations?.eln)
       .filter(property => {
         // TODO this is just a hack to avoid large values, e.g. rich text with images
         const value = section[property.name]
@@ -170,7 +165,7 @@ const SectionEditor = React.memo(function SectionEditor({sectionDef, section, on
         jsonData[property.name] = section[property.name]
       })
     return jsonData
-  }, [showJson, allProperties, section])
+  }, [showJson, allVisibleProperties, section])
 
   return (
     <div className={classes.root} ref={rootRef}>
@@ -180,8 +175,8 @@ const SectionEditor = React.memo(function SectionEditor({sectionDef, section, on
             <JsonEditor data={jsonData} onChange={handleJsonChange} />
           </Box>
         ) : (
-          allProperties.filter(filterHiddenProperties).map(property => (
-            property.isEditable
+              allVisibleProperties.map(property => (
+            property._isEditable
               ? <Box marginBottom={1} key={property.name}>
                 <PropertyEditor
                   quantityDef={property}

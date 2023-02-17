@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React, {useCallback, useMemo, useRef, useState} from 'react'
+import React, {useMemo, useRef, useState} from 'react'
 import PropTypes from 'prop-types'
 import {PropertyCard} from './PropertyCard'
 import SectionEditor from '../../archive/SectionEditor'
@@ -24,7 +24,7 @@ import {Box, IconButton, Typography, makeStyles} from '@material-ui/core'
 import CodeIcon from '@material-ui/icons/Code'
 import MoreIcon from '@material-ui/icons/MoreVert'
 import { ArchiveButton } from '../../nav/Routes'
-import {getAllProperties, SectionPlots} from '../../archive/ArchiveBrowser'
+import {getAllVisibleProperties, SectionPlots} from '../../archive/ArchiveBrowser'
 import Quantity, {QuantityCell, QuantityRow, QuantityTable} from '../../Quantity'
 import {Editor} from '@tinymce/tinymce-react'
 import { pluralize } from '../../../utils'
@@ -142,21 +142,12 @@ PropertyPreview.propTypes = {
 const SectionPreview = React.memo(({sectionDef, section}) => {
   const rootRef = useRef()
 
-  const allProperties = useMemo(() => getAllProperties(sectionDef), [sectionDef])
-
-  const filterHiddenProperties = useCallback((property) => {
-    const hiddenPropertyNames = sectionDef?.m_annotations?.eln?.[0]?.hide || []
-    return !hiddenPropertyNames.includes(property.name)
-  }, [sectionDef])
-
-  const properties = useMemo(() => {
-    return allProperties.filter(filterHiddenProperties)
-  }, [filterHiddenProperties, allProperties])
+  const allVisibleProperties = useMemo(() => getAllVisibleProperties(sectionDef), [sectionDef])
 
   return (
     <div ref={rootRef}>
       {<QuantityTable data={section}>
-        {properties.map(property => (
+        {allVisibleProperties.map(property => (
           <QuantityRow key={property.name} >
             <PropertyPreview quantityDef={property} section={section}/>
           </QuantityRow>
