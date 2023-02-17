@@ -97,11 +97,11 @@ class Filter(BaseModel):
 
 
 class SectionProperties(BaseModel):
-    ''' A filter defined by an include list or and exclude list of the quantities or subsections. '''
+    ''' A filter defined by an include list or and exclude list of the quantities and subsections. '''
 
     visible: Optional[Filter] = Field(
         1, description=strip('''
-            Defines the visible quantities and subsections. 
+            Defines the visible quantities and subsections.
         '''))
     editable: Optional[Filter] = Field(
         None, description=strip('''
