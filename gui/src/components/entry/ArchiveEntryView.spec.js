@@ -153,3 +153,43 @@ test.each([
     await navigateTo(path)
   }
 }, 5 * minutes)
+
+test('eln properties annotation', async () => {
+  closeAPI()
+  await startAPI('tests.states.entry.eln_properties', 'tests/data/entry/eln_properties', 'test', 'password')
+  await act(async () => render(<EntryContext entryId={'nwW7UiYFBvR9VQsKdehH9wd3Efws'}><ArchiveEntryView /></EntryContext>))
+  expect(await screen.findByText('Entry')).toBeVisible()
+  //
+  // const path = 'data'
+  // const sectionName = '../uploads/archive_browser_test/raw/inheriting-schema.archive.yaml#/definitions/section_definitions/1'
+  // const sectionName2 = '../uploads/archive_browser_test/raw/inheriting-schema.archive.yaml#/definitions/section_definitions/2'
+  await navigateTo('data')
+
+  await screen.getByText('Hall_measurement')
+  const data = await screen.getByTestId('lane1:data')
+
+  const allVisibleQuantities = await within(data).getAllByTestId("quantity-editor")
+
+  // test the visibility
+  expect(allVisibleQuantities.length).toBe(6)
+
+  // test the order
+  await within(allVisibleQuantities[0]).findByText(/^Crucible mass/i)
+  await within(allVisibleQuantities[1]).findByText(/^Atmosphere/i)
+  await within(allVisibleQuantities[2]).findByText(/^Crucible model/i)
+  await within(allVisibleQuantities[3]).findByText(/^Brutto mass before/i)
+  await within(allVisibleQuantities[4]).findByText(/^dose/i)
+  await within(allVisibleQuantities[5]).findByText(/^net mass before/i)
+
+  await navigateTo('data/instrument2')
+
+  // const y = await screen.findByText('Instrument2')
+
+  //
+  // const dropDown = await screen.findByTestId(`inheriting:SubSectionBase1`)
+  // expect(dropDown).toBeInTheDocument()
+  // const selectInput = within(dropDown).getByRole('textbox', { hidden: true })
+  // await waitFor(() => expect(selectInput.value).toEqual(sectionName))
+  // await fireEvent.change(selectInput, {target: {value: sectionName2}})
+  // await waitFor(() => expect(selectLabel).not.toBeInTheDocument())
+})

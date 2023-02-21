@@ -149,13 +149,14 @@ const SectionEditor = React.memo(function SectionEditor({sectionDef, section, on
   }, [handleArchiveChanged, onChange, section])
 
   const allVisibleProperties = useMemo(() => getAllVisibleProperties(sectionDef), [sectionDef])
+  const allVisibleQuantities = useMemo(() => allVisibleProperties.filter(property => property.m_def === QuantityMDef && property.m_annotations?.eln), [allVisibleProperties])
 
   const jsonData = useMemo(() => {
     if (!showJson) {
       return null
     }
     const jsonData = {}
-    allVisibleProperties.filter(property => property.m_def === QuantityMDef && property.m_annotations?.eln)
+    allVisibleQuantities
       .filter(property => {
         // TODO this is just a hack to avoid large values, e.g. rich text with images
         const value = section[property.name]
@@ -165,7 +166,7 @@ const SectionEditor = React.memo(function SectionEditor({sectionDef, section, on
         jsonData[property.name] = section[property.name]
       })
     return jsonData
-  }, [showJson, allVisibleProperties, section])
+  }, [showJson, allVisibleQuantities, section])
 
   return (
     <div className={classes.root} ref={rootRef}>
@@ -175,19 +176,21 @@ const SectionEditor = React.memo(function SectionEditor({sectionDef, section, on
             <JsonEditor data={jsonData} onChange={handleJsonChange} />
           </Box>
         ) : (
-              allVisibleProperties.map(property => (
-            property._isEditable
-              ? <Box marginBottom={1} key={property.name}>
+          allVisibleQuantities.map(quantity => (
+            quantity._isEditable
+              ? <Box marginBottom={1} key={quantity.name} data-testid={"quantity-editor"}>
                 <PropertyEditor
-                  quantityDef={property}
-                  value={section?.[property.name]} onChange={value => handleChange(property, value)}
+                  quantityDef={quantity}
+                  value={section?.[quantity.name]} onChange={value => handleChange(quantity, value)}
                 />
               </Box>
-              : <QuantityTable className={classes.quantityTable} data={section}>
-                <QuantityRow key={property.name} >
-                  <PropertyPreview quantityDef={property} section={section}/>
-                </QuantityRow>
-              </QuantityTable>
+              : <Box key={quantity.name} data-testid={"quantity-editor"}>
+                <QuantityTable className={classes.quantityTable} data={section}>
+                  <QuantityRow>
+                    <PropertyPreview quantityDef={quantity} section={section}/>
+                  </QuantityRow>
+                </QuantityTable>
+              </Box>
           ))
         )
       }
