@@ -29,6 +29,7 @@ from nomad.parsing.parser import ArchiveParser
 from nomad.datamodel import Context
 from nomad.datamodel.context import ServerContext, ClientContext, parse_path
 from nomad.datamodel.datamodel import EntryArchive, EntryMetadata
+from nomad.utils.exampledata import ExampleData
 
 
 @pytest.fixture(scope='module')
@@ -413,6 +414,28 @@ def test_server_external_schema(upload1_contents, upload2_contents, raw_files):
         del results['metadata']
         assert results == content
 
+    # archives: EntryArchive = []
+    #
+    # context = ClientContext(upload_id='upload1_id',
+    #                         installation_url=installation_url,
+    #                         username=test_user.username,
+    #                         password='password')
+    # test_archive = EntryArchive(
+    #     m_context=context,
+    #     metadata=EntryMetadata(entry_id='upload1_entry0', upload_id='upload1_id', mainfile=mainfile),
+    #     data=upload1_contents
+    # )
+    #
+    # archives.append(test_archive)
+    #
+    # upload1_files = create_test_upload_files('upload1_id', published=False, raw_files=directory, archives=archives)
+    # parser = ArchiveParser()
+    #
+    # parser.parse(
+    #     upload1_files.raw_file_object(mainfile).os_path,
+    #     test_archive)
+    # run_normalize(test_archive)
+
 
 def test_client_custom_schema(api_v1, published_wo_user_metadata):
     url = 'http://testserver/api/v1'
@@ -449,3 +472,106 @@ def test_client_custom_schema(api_v1, published_wo_user_metadata):
 
     if os.path.exists(full_path):
         os.remove(full_path)
+
+
+@pytest.mark.parametrize(
+    'upload1_contents, upload2_contents', [
+        pytest.param(
+            {
+                'schema.json': {
+                    'name': 'test schema package',
+                    'definitions': {
+                        'section_definitions': [
+                            {
+                                "base_sections": [
+                                    "nomad.datamodel.data.EntryData"
+                                ],
+                                "name": "BaseSection"
+                            }
+                        ]
+                    }
+                },
+                'chemical.archive.json': {
+                    'definitions': {
+                        'section_definitions': [
+                            {
+                                "base_sections": [
+                                    "../upload/raw/schema.json#/definitions/section_definitions/0"
+                                ],
+                                "name": "SubstanceExtended"
+                            }
+                        ]
+                    }
+                },
+                'chem.archive.json': {
+                    'definitions': {
+                        'section_definitions': [
+                            {
+                                "base_sections": [
+                                    "../upload/raw/chemical.archive.json#/definitions/section_definitions/0"
+                                ],
+                                "name": "Chem"
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                'extended_chem.archive.json': {
+                    'definitions': {
+                        'section_definitions': [
+                            {
+                                "base_sections": [
+                                    "../upload/upload1_id/archive/upload1_entry2#/definitions/section_definitions/0"
+                                ],
+                                "name": "ExtendedChem"
+                            }
+                        ]
+                    },
+                    "data": {
+                        "m_def": "#/definitions/section_definitions/0"
+                    }
+                }
+            }, id='external-references')]
+)
+def test_client_external_schema(
+        upload1_contents, upload2_contents, raw_files, test_user, api_v1, mongo_infra, elastic_infra):
+    upload1_files = files.StagingUploadFiles('upload1_id', create=True)
+    for file_name, content in upload1_contents.items():
+        with upload1_files.raw_file(file_name, 'wt') as f:
+            json.dump(content, f, indent=2)
+
+    data = ExampleData(main_author=test_user)
+    data.create_upload(upload_id='test_upload_id', published=False)
+
+    data.create_entry(
+        upload_id='upload1_id',
+        entry_id='upload1_entry1',
+        mainfile='/home/mohammad/Projects/nomad/.volumes/test_fs/staging/up/upload1_id/raw/',
+    )
+
+    data.save(with_mongo=True, with_es=True)
+
+    installation_url = 'http://testserver'
+    upload2_files = files.StagingUploadFiles('upload2_id', create=True)
+    for file_name, content in upload2_contents.items():
+        with upload2_files.raw_file(file_name, 'wt') as f:
+            json.dump(content, f, indent=2)
+
+    context2 = ClientContext(upload_id='upload2_id',
+                            installation_url=installation_url,
+                            username=test_user.username,
+                            password='password')
+    parser = ArchiveParser()
+
+    for index, (file_name, content) in enumerate(upload2_contents.items()):
+        entry_id = 'upload2_entry{}'.format(index)
+        archive = EntryArchive(
+            m_context=context2, metadata=EntryMetadata(
+                upload_id='upload2_id', entry_id=entry_id, mainfile=file_name))
+
+        parser.parse(mainfile=upload2_files.raw_file_object(file_name).os_path, archive=archive)
+        upload2_files.write_archive(entry_id, archive.m_to_dict())
+        results = archive.m_to_dict(with_out_meta=True)
+        del results['metadata']
+        assert results == content

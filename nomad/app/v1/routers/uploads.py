@@ -1226,7 +1226,7 @@ async def get_upload_entry_archive(
     For the upload specified by `upload_id`, gets the full archive of a single entry that
     is identified by the given `entry_id`.
     '''
-    _get_upload_with_read_access(upload_id, user, include_others=True)
+    # _get_upload_with_read_access(upload_id, user, include_others=True)
     return answer_entry_archive_request(
         dict(upload_id=upload_id, entry_id=entry_id),
         required='*', user=user)
